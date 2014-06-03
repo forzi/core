@@ -3,6 +3,7 @@ namespace stradivari\core {
 	abstract class App {
 		public static $input = array();
 		public static $pool = null;
+        public static $exceptionInterseptor = 'ExceptionInterceptor::execute';
 		public static function execute() {
 			try {
 				if ( isset(self::$input['argv']) ) {
@@ -11,7 +12,7 @@ namespace stradivari\core {
 					self::server();
 				}
 			} catch ( \Exception $exception ) {
-				ExceptionInterceptor::execute($exception);
+                call_user_func(self::$exceptionInterseptor, $exception);
 			}
 		}
 		private static function server() {
