@@ -2,12 +2,8 @@
 namespace stradivari\core {
     abstract class Redirector {
 		public static $defaultRedirect = 301;
-		public static $defaultRulesFile = null;
-        private static $defaultRulesFileName = 'stradivari/stradivari_default/redirector_rules.yaml';
         
         public static function executeRulesFile($rulesFile = null, $redirectType = null) {
-			self::$defaultRulesFile = self::$defaultRulesFile ? self::$defaultRulesFile : Autoloader::searchFile(self::$defaultRulesFileName);
-			$rulesFile = $rulesFile ? $rulesFile : self::$defaultRulesFile;
 			$converter = new \stradivari\data_converter\FileConverter($rulesFile);
 			$converter->array();
 			self::executeRules($converter->data, $redirectType);
@@ -16,12 +12,12 @@ namespace stradivari\core {
 			if ( !$rules ) {
 				return;
 			}
-			$uri = App::$input['server']['REQUEST_URI'];
-			$url = App::$input['server']['HTTP_HOST'] . $uri;
+			$uri = App::$pool['input']['server']['REQUEST_URI'];
+			$url = App::$pool['input']['server']['HTTP_HOST'] . $uri;
 			foreach ( $rules as $regexp => $redirect ) {
 				foreach (array('regexp', 'redirect') as $param) {
 					if ( is_string($$param) ) {
-						$$param = str_replace('##host##', App::$input['server']['HTTP_HOST'], $$param);
+						$$param = str_replace('##host##', App::$pool['input']['server']['HTTP_HOST'], $$param);
 						$$param = str_replace('##url##', $url, $$param);
 						$$param = str_replace('##uri##', $uri, $$param);
 					}

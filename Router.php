@@ -1,13 +1,9 @@
 <?
 namespace stradivari\core {
     abstract class Router {
-        public static $controllerNamespace = "\\stradivari\\stradivari_default\\controller";
-        public static $defaultRulesFile = null;
-        private static $defaultRulesFileName = 'stradivari/stradivari_default/router_rules.yaml';
+        public static $controllerNamespace;
 
         public static function executeRulesFile($rulesFile = null) {
-			self::$defaultRulesFile = self::$defaultRulesFile ? self::$defaultRulesFile : Autoloader::searchFile(self::$defaultRulesFileName);
-			$rulesFile = $rulesFile ? $rulesFile : self::$defaultRulesFile;
 			$converter = new \stradivari\data_converter\FileConverter($rulesFile);
 			$converter->array();
 			self::executeRules($converter->data);
@@ -16,11 +12,11 @@ namespace stradivari\core {
 			if ( !$rules ) {
 				return;
 			}
-			$uri = App::$input['server']['REQUEST_URI'];
-			$url = App::$input['server']['HTTP_HOST'] . $uri;
+			$uri = App::$pool['input']['server']['REQUEST_URI'];
+			$url = App::$pool['input']['server']['HTTP_HOST'] . $uri;
 			foreach ( $rules as $regexp => $rule ) {
                 if ( is_string($regexp) ) {
-                    $regexp = str_replace('##host##', App::$input['server']['HTTP_HOST'], $regexp);
+                    $regexp = str_replace('##host##', App::$pool['input']['server']['HTTP_HOST'], $regexp);
                     $regexp = str_replace('##url##', $url, $regexp);
                     $regexp = str_replace('##uri##', $uri, $regexp);
                 }
@@ -34,8 +30,8 @@ namespace stradivari\core {
 			}
         }
         public static function route($route) {
-            App::$input['route'] = explode(' ', $route);
-            self::routeArray(App::$input['route']);
+            App::$pool['input']['route'] = explode(' ', $route);
+            self::routeArray(App::$pool['input']['route']);
         }
         private static function routeArray($arguments) {
 			$calledClass = self::validateRouteClass(array_shift($arguments));
@@ -75,7 +71,7 @@ namespace stradivari\core {
             return $calledMethod = $calledMethod ? $calledMethod : "main";
         }
         private static function request($calledClass, $calledMethod, $arguments) {
-			App::$input['arguments'] = $arguments;
+			App::$pool['input']['arguments'] = $arguments;
             if ( !class_exists($calledClass) ) {
                 throw new exception\NoSuchRequest($calledClass);
             }

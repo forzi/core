@@ -1,37 +1,54 @@
 <?
 namespace stradivari\core {
 	abstract class App {
-		public static $input = array();
 		public static $pool = null;
-        public static $exceptionInterseptor = '\stradivari\stradivari_default\ExceptionInterceptor::execute';
+        public static $creator = null;
 		public static function execute() {
-			try {
-				if ( isset(self::$input['argv']) ) {
-					self::console();
-				} else {
-					self::server();
-				}
-			} catch ( \Exception $exception ) {
-                call_user_func(self::$exceptionInterseptor, $exception);
-			}
+            self::$pool['settings'] += self::defaultSettings();
+            Router::$controllerNamespace = self::$pool['settings']['controllerNamespace'];
+            if ( self::$pool['settings']['sessionName'] ) {
+                ini_set('session.name', self::$pool['settings']['sessionName']);
+                session_start();
+            }
+            if ( isset(self::$pool['input']['argv']) ) {
+                self::console();
+            } else {
+                self::server();
+            }
 		}
-		private static function server() {
-			self::$input['get'] = $_GET;
-			self::$input['post'] = $_POST;
-			self::$input['request'] = $_REQUEST;
-			self::$input['input'] = file_get_contents("php://input");
-			self::$input['headers'] = getallheaders();
-			self::$input['server'] = $_SERVER;
-			Redirector::executeRulesFile();
-            Router::executeRulesFile();
+        private static function defaultSettings() {
+            $defaultSettings['sessionName'] = 'sSid';
+            $defaultSettings['defaultSubDir'] = self::$pool['settings']['company'] . '/' . self::$pool['settings']['product'];
+            $defaultSettings['redirectorRulesFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/redirector_rules.yaml');
+            $defaultSettings['routerRulesFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/router_rules.yaml');
+            $defaultSettings['defaultNamespace'] = '\\' . self::$pool['settings']['company'] . '\\' . self::$pool['settings']['product'];
+            $defaultSettings['modelNamespace'] = $defaultSettings['defaultNamespace'] . '\model';
+            $defaultSettings['viewNamespace'] = $defaultSettings['defaultNamespace'] . '\view';
+            $defaultSettings['controllerNamespace'] = $defaultSettings['defaultNamespace'] . '\controller';
+            return $defaultSettings;
+        }
+        private static function server() {
+			self::$pool['input']['get'] = $_GET;
+			self::$pool['input']['post'] = $_POST;
+			self::$pool['input']['request'] = $_REQUEST;
+			self::$pool['input']['input'] = file_get_contents("php://input");
+			self::$pool['input']['headers'] = getallheaders();
+			self::$pool['input']['server'] = $_SERVER;
+            self::$pool['input']['env'] = $_ENV;
+            self::$pool['input']['files'] = $_FILES;
+            if ( isset($_SESSION) ) {
+                self::$pool['input']['session'] = &$_SESSION;
+            }
+			Redirector::executeRulesFile(self::$pool['settings']['redirectorRulesFile']);
+            Router::executeRulesFile(self::$pool['settings']['routerRulesFile']);
             try {
-				Router::routeServer(self::$input['server']['REQUEST_URI']);
+				Router::routeServer(self::$pool['input']['server']['REQUEST_URI']);
 			} catch ( exception\RequestException $e ) {
 				throw new exception\NoSuchPage();
 			}
 		}
         private static function console() {
-            $arguments = self::$input['argv'];
+            $arguments = self::$pool['input']['argv'];
             array_shift($arguments);
             Router::route(implode(' ', $arguments));
         }
