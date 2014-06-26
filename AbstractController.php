@@ -1,7 +1,7 @@
 <?
 namespace stradivari\core {
     abstract class AbstractController extends \stradivari\controller\AbstractController {
-        public static $viewNamespace = "\\stradivari\\stradivari_default\\view";
+        public static $viewNamespace;
         
         protected static function searchFile($view) {
             $filepath = parent::searchFile($view);

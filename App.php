@@ -6,6 +6,7 @@ namespace stradivari\core {
 		public static function execute() {
             self::$pool['settings'] += self::defaultSettings();
             Router::$controllerNamespace = self::$pool['settings']['controllerNamespace'];
+            AbstractController::$viewNamespace = self::$pool['settings']['viewNamespace'];
             if ( self::$pool['settings']['sessionName'] ) {
                 ini_set('session.name', self::$pool['settings']['sessionName']);
                 session_start();
