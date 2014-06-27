@@ -72,7 +72,9 @@ namespace stradivari\core {
         }
         private static function request($calledClass, $calledMethod, $arguments) {
 			App::$pool['input']['arguments'] = $arguments;
-            if ( !class_exists($calledClass) ) {
+            try {
+                class_exists($calledClass);
+            } catch ( exception\NoSuchClass $e ) {
                 throw new exception\NoSuchRequest($calledClass);
             }
             if ( call_user_func_array("{$calledClass}::{$calledMethod}", $arguments) !== false ) {

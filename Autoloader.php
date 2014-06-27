@@ -50,16 +50,21 @@ namespace stradivari\core {
 			$last = explode('_', $last);
 			$path = array_merge($path, $last);
 			$path = implode('/', $path);
-			@include_once self::searchPhpFile($path);
-            return class_exists($class, false);
+            return self::isClassInFile($class, self::searchPhpFile($path));
 		}
 		private static function loadClassmap($class) {
 			if ( array_key_exists($class, self::$environments['classmap']) && file_exists(self::$environments['classmap'][$class]) ) {
-				@include_once self::$environments['classmap'][$class];
-				return class_exists($class, false);
+				return self::isClassInFile($class, self::$environments['classmap'][$class]);
 			}
 			return false;
 		}
+        private static function isClassInFile($class, $file) {
+            if ( !is_readable($file) ) {
+                return false;
+            }
+            require_once $file;
+            return class_exists($class, false) || interface_exists($class, false) || trait_exists($class, false);
+        }
         public static function searchPhpFile($path) {
             foreach (self::$extensions as $extension) {
 				$file = self::searchFile("{$path}.{$extension}");

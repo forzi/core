@@ -12,5 +12,12 @@ namespace stradivari\core {
             $filepath = Autoloader::searchPhpFile($file);
             return $filepath;
         }
+        public static function __callStatic($calledMethod, $arguments = array()) {
+            try {
+                return parent::__callStatic($calledMethod, $arguments);
+            } catch ( \stradivari\controller\exception\NoSuchRequestMethod $exception ) {
+                throw new \stradivari\core\exception\NoSuchRequestMethod($exception->getMessage());
+            }
+        }
 	}
 }
