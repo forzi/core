@@ -22,6 +22,7 @@ namespace stradivari\core {
 						$$param = str_replace('##uri##', $uri, $$param);
 					}
 				}
+                $regexp = '/' . str_replace('/', '\/', $regexp) . '/';
 				if ( @preg_match($regexp, $url, $matches) ) {
 					if ( is_string($redirect) ) {
                         foreach($matches as $key => $match) {

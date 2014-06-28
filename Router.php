@@ -14,12 +14,11 @@ namespace stradivari\core {
 			}
 			$uri = App::$pool['input']['server']['REQUEST_URI'];
 			$url = App::$pool['input']['server']['HTTP_HOST'] . $uri;
-			foreach ( $rules as $regexp => $rule ) {
-                if ( is_string($regexp) ) {
-                    $regexp = str_replace('##host##', App::$pool['input']['server']['HTTP_HOST'], $regexp);
-                    $regexp = str_replace('##url##', $url, $regexp);
-                    $regexp = str_replace('##uri##', $uri, $regexp);
-                }
+        foreach ( $rules as $regexp => $rule ) {
+                $regexp = str_replace('##host##', App::$pool['input']['server']['HTTP_HOST'], $regexp);
+                $regexp = str_replace('##url##', $url, $regexp);
+                $regexp = str_replace('##uri##', $uri, $regexp);
+                $regexp = '/' . str_replace('/', '\/', $regexp) . '/';
 				if ( @preg_match($regexp, $url, $matches) ) {
                     $rule = is_array($rule) ? self::parseRestful($rule) : $rule;
                     foreach($matches as $key => $match) {
