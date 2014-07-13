@@ -13,6 +13,7 @@ namespace stradivari\core {
 			$uri = App::$pool['input']['server']['REQUEST_URI'];
 			$url = App::$pool['input']['server']['HTTP_HOST'] . $uri;
 			$query = App::$pool['input']['server']['QUERY_STRING'];
+			$query = $query ? $query : '/';
 			$params = left_cut($uri, $query);
 			foreach ( $rules as $regexp => $rule ) {
 				foreach (array('regexp', 'rule') as $param) {
