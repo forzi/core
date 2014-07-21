@@ -1,12 +1,12 @@
 <?
 namespace stradivari\core {
 	abstract class Director {
-		 public static function executeRulesFile($rulesFile, $redirectType = null) {
+		 public static function executeRulesFile($rulesFile, $useUri = false, $redirectType = null) {
 			$converter = new \stradivari\data_converter\FileConverter($rulesFile);
 			$converter->array();
-			static::executeRules($converter->data, $redirectType);
+			static::executeRules($converter->data, $useUri, $redirectType);
 		}
-        public static function executeRules($rules, $redirectType = null) {
+        public static function executeRules($rules, $useUri = false, $redirectType = null) {
 			if ( !$rules ) {
 				return;
 			}
@@ -15,6 +15,7 @@ namespace stradivari\core {
 			$query = App::$pool['input']['server']['QUERY_STRING'];
 			$query = $query ? $query : '/';
 			$params = left_cut($uri, $query);
+			$execute = $useUri ? $uri : $query;
 			foreach ( $rules as $regexp => $rule ) {
 				foreach (array('regexp', 'rule') as $param) {
 					if ( is_string($$param) ) {
@@ -26,7 +27,7 @@ namespace stradivari\core {
 					}
 				}
                 $regexp = '/' . str_replace('/', '\/', $regexp) . '/';
-				if ( @preg_match($regexp, $query, $matches) ) {
+				if ( @preg_match($regexp, $execute, $matches) ) {
 					if ( is_string($rule) ) {
                         foreach($matches as $key => $match) {
                             $rule = str_replace("##{$key}##", $match, $rule);

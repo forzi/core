@@ -20,8 +20,10 @@ namespace stradivari\core {
         private static function defaultSettings() {
             $defaultSettings['sessionName'] = 'sSid';
             $defaultSettings['defaultSubDir'] = self::$pool['settings']['company'] . '/' . self::$pool['settings']['product'];
-            $defaultSettings['redirectorRulesFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/redirector_rules.yaml');
-            $defaultSettings['routerRulesFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/router_rules.yaml');
+            $defaultSettings['redirectQueryFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/redirect_query.yaml');
+			$defaultSettings['redirectUriFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/redirect_uri.yaml');
+			$defaultSettings['routeQueryFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/route_query.yaml');
+			$defaultSettings['routeUriFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/route_uri.yaml');
             $defaultSettings['defaultNamespace'] = '\\' . self::$pool['settings']['company'] . '\\' . self::$pool['settings']['product'];
             $defaultSettings['modelNamespace'] = $defaultSettings['defaultNamespace'] . '\model';
             $defaultSettings['viewNamespace'] = $defaultSettings['defaultNamespace'] . '\view';
@@ -40,8 +42,10 @@ namespace stradivari\core {
             if ( isset($_SESSION) ) {
                 self::$pool['input']['session'] = &$_SESSION;
             }
-			Redirector::executeRulesFile(self::$pool['settings']['redirectorRulesFile']);
-            Router::executeRulesFile(self::$pool['settings']['routerRulesFile']);
+			Redirector::executeRulesFile(self::$pool['settings']['redirectQueryFile'], false);
+			Redirector::executeRulesFile(self::$pool['settings']['redirectUriFile'], true);
+            Router::executeRulesFile(self::$pool['settings']['routeQueryFile'], false);
+			Router::executeRulesFile(self::$pool['settings']['routeUriFile'], true);
             try {
 				Router::routeServer(self::$pool['input']['server']['REQUEST_URI']);
 			} catch ( exception\RequestException $e ) {
