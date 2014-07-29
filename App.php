@@ -20,14 +20,10 @@ namespace stradivari\core {
         private static function defaultSettings() {
             $defaultSettings['sessionName'] = 'sSid';
             $defaultSettings['defaultSubDir'] = self::$pool['settings']['company'] . '/' . self::$pool['settings']['product'];
-            $defaultSettings['redirectQueryFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/redirect_query.yaml');
-			$defaultSettings['redirectUriFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/redirect_uri.yaml');
-			$defaultSettings['routeQueryFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/route_query.yaml');
-			$defaultSettings['routeUriFile'] = Autoloader::searchFile($defaultSettings['defaultSubDir'] . '/route_uri.yaml');
             $defaultSettings['defaultNamespace'] = '\\' . self::$pool['settings']['company'] . '\\' . self::$pool['settings']['product'];
             $defaultSettings['modelNamespace'] = $defaultSettings['defaultNamespace'] . '\model';
             $defaultSettings['viewNamespace'] = $defaultSettings['defaultNamespace'] . '\view';
-            $defaultSettings['controllerNamespace'] = $defaultSettings['defaultNamespace'] . '\controller';
+            $defaultSettings['controllerNamespace'] = $defaultSettings['defaultNamespace'] . '\router';
             return $defaultSettings;
         }
         private static function server() {
@@ -42,15 +38,41 @@ namespace stradivari\core {
             if ( isset($_SESSION) ) {
                 self::$pool['input']['session'] = &$_SESSION;
             }
-			Redirector::executeRulesFile(self::$pool['settings']['redirectQueryFile'], false);
-			Redirector::executeRulesFile(self::$pool['settings']['redirectUriFile'], true);
-            Router::executeRulesFile(self::$pool['settings']['routeQueryFile'], false);
-			Router::executeRulesFile(self::$pool['settings']['routeUriFile'], true);
+			self::$pool['input']['url'] = self::serverUrl();
+			foreach ( array('redirector', 'router') as $director ) {
+				foreach ( self::$pool['input']['url'] as $key => &$part ) {
+					$filePath = Autoloader::searchFile(self::$pool['settings']['defaultSubDir'] . "/{$director}_{$key}.yaml");
+					if ( $filePath ) {
+						$class = '\stradivari\core\\' . ucfirst($director);
+						$class::executeRulesFile($filePath, $key);
+					}
+				}
+				unset($part);
+			}
             try {
 				Router::routeServer(self::$pool['input']['server']['REQUEST_URI']);
 			} catch ( exception\RequestException $e ) {
 				throw new exception\NoSuchPage();
 			}
+		}
+		private static function serverUrl() {
+			$result = array();
+			$result['scheme'] = strtolower($_SERVER['SERVER_PROTOCOL']);
+			$result['scheme'] = explode('/', $result['scheme']);
+			$result['scheme'] = array_combine(array('name', 'version'), $result['scheme']);
+			$result['scheme'] = $result['scheme']['name'];
+			$result['host'] = $_SERVER['HTTP_HOST'];
+			$result['port'] = $_SERVER['SERVER_PORT'];
+			$result['part'] = $_SERVER['REQUEST_URI'] ? $_SERVER['REQUEST_URI'] : '/';
+			$questionPosition = strpos($result['part'], '?');
+			if ( $questionPosition === false ) {
+				$result['path'] = $result['part'];
+				$result['query'] = '';
+			} else {
+				$result['path'] = substr($result['part'], 0, $questionPosition);
+				$result['query'] = substr($result['part'], $questionPosition);
+			}
+			return $result;
 		}
         private static function console() {
             $arguments = self::$pool['input']['argv'];
