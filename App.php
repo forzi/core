@@ -27,20 +27,11 @@ namespace stradivari\core {
             return $defaultSettings;
         }
         private static function server() {
-			self::$pool['input']['get'] = $_GET;
-			self::$pool['input']['post'] = $_POST;
-			self::$pool['input']['request'] = $_REQUEST;
-			self::$pool['input']['input'] = file_get_contents("php://input");
-			self::$pool['input']['headers'] = getallheaders();
-			self::$pool['input']['server'] = $_SERVER;
-            self::$pool['input']['env'] = $_ENV;
-            self::$pool['input']['files'] = $_FILES;
-            if ( isset($_SESSION) ) {
-                self::$pool['input']['session'] = &$_SESSION;
-            }
-			self::$pool['input']['url'] = self::serverUrl();
+			self::$pool['input'] = isset(self::$pool['input']) ? self::$pool['input'] : array();
+			self::$pool['input'] += parseServerParams();
+			self::$pool['input']['url'] = new \stradivari\url\Url(self::$pool['input']['url']);
 			foreach ( array('redirector', 'router') as $director ) {
-				foreach ( self::$pool['input']['url'] as $key => &$part ) {
+				foreach ( self::$pool['input']['url'] as $key => $part ) {
 					$filePath = Autoloader::searchFile(self::$pool['settings']['defaultSubDir'] . "/{$director}_{$key}.yaml");
 					if ( $filePath ) {
 						$class = '\stradivari\core\\' . ucfirst($director);
@@ -50,29 +41,10 @@ namespace stradivari\core {
 				unset($part);
 			}
             try {
-				Router::routeServer(self::$pool['input']['server']['REQUEST_URI']);
+				Router::routeServer(self::$pool['input']['url']['path']);
 			} catch ( exception\RequestException $e ) {
 				throw new exception\NoSuchPage();
 			}
-		}
-		private static function serverUrl() {
-			$result = array();
-			$result['scheme'] = strtolower($_SERVER['SERVER_PROTOCOL']);
-			$result['scheme'] = explode('/', $result['scheme']);
-			$result['scheme'] = array_combine(array('name', 'version'), $result['scheme']);
-			$result['scheme'] = $result['scheme']['name'];
-			$result['host'] = $_SERVER['HTTP_HOST'];
-			$result['port'] = $_SERVER['SERVER_PORT'];
-			$result['part'] = $_SERVER['REQUEST_URI'] ? $_SERVER['REQUEST_URI'] : '/';
-			$questionPosition = strpos($result['part'], '?');
-			if ( $questionPosition === false ) {
-				$result['path'] = $result['part'];
-				$result['query'] = '';
-			} else {
-				$result['path'] = substr($result['part'], 0, $questionPosition);
-				$result['query'] = substr($result['part'], $questionPosition);
-			}
-			return $result;
 		}
         private static function console() {
             $arguments = self::$pool['input']['argv'];

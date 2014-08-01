@@ -42,7 +42,7 @@ namespace stradivari\core {
 			}
 		}
 		protected static function prepareExpression($expression, $rules) {
-			foreach ( $rules as $key => &$part ) {
+			foreach ( $rules as $key => $part ) {
 				$expression = str_replace("##{$key}##", $part, $expression);
 			}
 			return $expression;
