@@ -17,6 +17,6 @@
 	},
 	"minimum-stability": "dev",
 	"autoload": {
-		"files": ["vendor/stradivari/core/functions.php"]
+		"files": ["functions.php"]
 	}
 }
